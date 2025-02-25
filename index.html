@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digits of Pi Search Tool</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+
+        #container {
+            padding: 20px;
+        }
+
+        #sequence {
+            font-size: 24px;
+            color: gray;
+            white-space: nowrap;
+            overflow-x: auto;
+            width: 100vw;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        #search-section {
+            margin-top: 50px;
+        }
+
+        input[type="text"] {
+            font-size: 24px;
+            padding: 10px;
+            width: 250px;
+            margin: 10px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .bold-red {
+            font-weight: bold;
+            color: red;
+        }
+
+        .highlighted-result {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2d72d9;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .highlighted-position {
+            font-size: 32px;
+            font-weight: bold;
+            color: #e74c3c;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .highlighted-text {
+            font-size: 28px;
+            margin-top: 10px;
+        }
+
+        #fake-sequence-list {
+            margin-top: 20px;
+            color: gray;
+        }
+
+        #fake-sequence-list ul {
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            list-style-type: none;
+        }
+
+        #fake-sequence-list li {
+            margin: 0 5px;
+            padding: 5px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 28px;
+            font-weight: normal;
+            text-align: center;
+        }
+
+        #settings-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+        #settings-menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        #settings-menu input {
+            font-size: 18px;
+            padding: 5px;
+            width: 100px;
+            text-align: center;
+        }
+
+        #settings-menu button {
+            font-size: 18px;
+            margin-top: 5px;
+        }
+
+        #extra-info {
+            margin-top: 50px;
+        }
+
+        #frequencies, #fun-facts {
+            background: #ffffff;
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 8px;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        #frequencies h2, #fun-facts h2 {
+            font-size: 24px;
+        }
+
+        #frequencies p, #fun-facts p {
+            font-size: 18px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="container">
+        <h1>Digits of Pi Search Tool</h1>
+        <p>Enter a number to see where it appears in the decimal sequence of Pi.</p>
+
+        <div id="search-section">
+            <input type="text" id="user-number" placeholder="Enter a number">
+            <button onclick="findPiPosition()">Find Position</button>
+        </div>
+
+        <div id="result"></div>
+        <div id="sequence"></div>
+    </div>
+
+    <!-- Settings Icon -->
+    <div id="settings-icon" onclick="toggleSettings()">⚙️</div>
+
+    <!-- Settings Menu -->
+    <div id="settings-menu">
+        <label for="force-position">Force Position:</label>
+        <input type="number" id="force-position" value="45782">
+        <button onclick="updateForcePosition()">Save</button>
+    </div>
+
+    <div id="fun-facts">
+            <h2>Fun Facts About Pi</h2>
+            <p>🎉 Pi is an irrational number — it cannot be written as a simple fraction!</p>
+            <p>🔢 Pi has been calculated to over 62 trillion digits, but most practical uses only need a few dozen.</p>
+            <p>📅 Pi Day is celebrated on March 14th (3/14) because of the first three digits of Pi.</p>
+            <p>🎈 The symbol for Pi (π) was first used in 1706 by mathematician William Jones.</p>
+            <p>🌀 The digits of Pi are believed to be randomly distributed, though this has not been proven.</p>
+        </div>
+
+    <script>
+        let state = 0;
+        let FORCED_POSITION = 45782;
+
+        const REAL_PI_DIGITS = "141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481174502841027019385211055596446229489549303819644288109756659334461284756482337867831527120190914564856692346034861045432664821339360726024914127372458700666031558817488152092096282925409171536436789259036001133053054882046652138414695194151160943305727036575959195309218611738193261179310511854807446237996274956735188575272489122793818301194912";
+
+        function findPiPosition() {
+            const number = document.getElementById('user-number').value;
+
+            if (number.length > 0 && !isNaN(number)) {
+                const realPosition = findRealPosition(number);
+
+                if (realPosition) {
+                    document.getElementById('result').innerHTML = `Your number <span class="bold-red">${number}</span> first appears at position <span class="highlighted-position">${realPosition}</span> in the digits of Pi.`;
+                    state = 0;
+                } else {
+                    document.getElementById('result').innerHTML = `Your number <span class="bold-red">${number}</span> first appears at position <span class="highlighted-position">${FORCED_POSITION}</span> in the digits of Pi.`;
+                    state = 200;
+                }
+
+                displayPiSequence(number, realPosition);
+            } else {
+                alert('Please enter a valid number.');
+            }
+        }
+
+        function findRealPosition(number) {
+            const position = REAL_PI_DIGITS.indexOf(number);
+            return position === -1 ? null : position + 1;
+        }
+
+        function displayPiSequence(number, realPosition) {
+            const sequenceElement = document.getElementById('sequence');
+
+            const before = state === 0
+                ? REAL_PI_DIGITS.slice(0, realPosition - 1)
+                : Array.from({ length: 5000 }, () => Math.floor(Math.random() * 10)).join('');
+            const after = state === 0
+                ? REAL_PI_DIGITS.slice(realPosition + number.length - 1)
+                : generateFibonacciSequence(number).join('');
+
+            const first200Digits = REAL_PI_DIGITS.slice(0, 200);
+            const fullSequence = state === 0
+                ? `${before}<span class="bold-red">${number}</span>${after}`
+                : `${first200Digits}${before}<span class="bold-red">${number}</span>${after}`;
+
+            sequenceElement.innerHTML = fullSequence;
+
+            const sequenceWidth = sequenceElement.scrollWidth;
+            const windowWidth = window.innerWidth;
+            const numberPosition = state === 0 ? before.length : 200 + before.length;
+            const offset = numberPosition * (sequenceWidth / fullSequence.length);
+
+            sequenceElement.scrollLeft = offset - windowWidth / 3;
+        }
+
+        function generateFibonacciSequence(number) {
+            const digits = number.split('').map(digit => parseInt(digit));
+            let fibSequence = [digits[0], digits[1]];
+
+            for (let i = 2; i < 5000; i++) {
+                let nextDigit = (fibSequence[i - 2] + fibSequence[i - 1]) % 10;
+                fibSequence.push(nextDigit);
+            }
+
+            return fibSequence.slice(2);
+        }
+
+        function toggleSettings() {
+            const menu = document.getElementById('settings-menu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function updateForcePosition() {
+            const newPosition = parseInt(document.getElementById('force-position').value);
+            if (!isNaN(newPosition) && newPosition > 0) {
+                FORCED_POSITION = newPosition;
+                alert(`Force position updated to ${FORCED_POSITION}`);
+                toggleSettings();
+            } else {
+                alert('Please enter a valid position.');
+            }
+        }
+    </script>
+
+</body>
+</html>
