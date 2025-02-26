@@ -125,27 +125,31 @@
             margin-top: 5px;
         }
 
-        #extra-info {
+        #pi-fun-facts {
             margin-top: 50px;
-        }
-
-        #frequencies, #fun-facts {
-            background: #ffffff;
             padding: 20px;
-            margin: 20px auto;
-            border-radius: 8px;
-            max-width: 600px;
-            text-align: left;
+            background-color: #f7f7f7;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        #frequencies h2, #fun-facts h2 {
-            font-size: 24px;
+        #pi-fun-facts h2 {
+            font-size: 28px;
+            color: #333;
         }
 
-        #frequencies p, #fun-facts p {
-            font-size: 18px;
-            line-height: 1.5;
+        #fun-facts-list {
+            margin-top: 10px;
+            list-style-type: none;
+            padding: 0;
         }
+
+        #fun-facts-list li {
+            font-size: 20px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        
     </style>
 </head>
 <body>
@@ -169,27 +173,81 @@
     <!-- Settings Menu -->
     <div id="settings-menu">
         <label for="force-position">Force Position:</label>
-        <input type="number" id="force-position" value="45782">
-        <button onclick="updateForcePosition()">Save</button>
+        <input type="number" id="force-position" value="45782" style="display:none;"><br>
+
+        <label for="position-mode">Position Mode:</label>
+        <select id="position-mode">
+            <option value="forced">Forced Position</option>
+            <option value="fibonacci">Fibonacci Position</option>
+        </select><br>
+
+        <button onclick="updateSettings()">Save</button>
     </div>
 
-    <div id="fun-facts">
-            <h2>Fun Facts About Pi</h2>
-            <p>🎉 Pi is an irrational number — it cannot be written as a simple fraction!</p>
-            <p>🔢 Pi has been calculated to over 62 trillion digits, but most practical uses only need a few dozen.</p>
-            <p>📅 Pi Day is celebrated on March 14th (3/14) because of the first three digits of Pi.</p>
-            <p>🎈 The symbol for Pi (π) was first used in 1706 by mathematician William Jones.</p>
-            <p>🌀 The digits of Pi are believed to be randomly distributed, though this has not been proven.</p>
-        </div>
+    <div id="pi-fun-facts">
+        <h2>Fun Facts About Pi</h2>
+        <ul id="fun-facts-list">
+            <!-- Fun facts will go here -->
+        </ul>
+    </div>
 
     <script>
+
+        const piFunFacts = [
+            "Pi is an irrational number, which means it cannot be expressed as a simple fraction. 🤔",
+            "Pi is approximately 3.14159, but it has been calculated to over 31 trillion digits! 🔢",
+            "Pi is used in various fields including mathematics, physics, engineering, and even in computer science. 🧑‍🔬",
+            "The symbol for Pi (π) was first used by Welsh mathematician William Jones in 1706. 📚",
+            "Pi Day is celebrated on March 14th (3/14), since 3, 1, and 4 are the first three digits of Pi. 🎉",
+            "Albert Einstein was born on Pi Day, March 14, 1879! 🧠",
+            "Pi is involved in calculating the circumference and area of a circle, which makes it one of the most important constants in mathematics. 🔵",
+            "The record for memorizing Pi is held by Rajveer Meena, who recited 70,000 digits of Pi! 🏅",
+            "Pi is not just a number, but an ongoing mystery that continues to be explored by mathematicians worldwide. 🔍"
+        ];
+
+        // Function to display multiple random facts
+        function displayRandomFacts() {
+            const factList = document.getElementById('fun-facts-list');
+            factList.innerHTML = '';  // Clear any previous facts
+
+            // Get a random number of facts (e.g., 3 facts at a time)
+            const numberOfFacts = 3; 
+            const randomFacts = [];
+
+            while (randomFacts.length < numberOfFacts) {
+                const randomFact = piFunFacts[Math.floor(Math.random() * piFunFacts.length)];
+                // Ensure that we don't repeat the same fact
+                if (!randomFacts.includes(randomFact)) {
+                    randomFacts.push(randomFact);
+                }
+            }
+
+            // Add each fact to the list
+            randomFacts.forEach(fact => {
+                const listItem = document.createElement('li');
+                listItem.textContent = fact;
+                factList.appendChild(listItem);
+            });
+        }
+
+        // Call this function when the page loads to add the facts
+        window.onload = displayRandomFacts;
+
         let state = 0;
         let FORCED_POSITION = 45782;
+        let positionMode = 'forced';
 
         const REAL_PI_DIGITS = "141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481174502841027019385211055596446229489549303819644288109756659334461284756482337867831527120190914564856692346034861045432664821339360726024914127372458700666031558817488152092096282925409171536436789259036001133053054882046652138414695194151160943305727036575959195309218611738193261179310511854807446237996274956735188575272489122793818301194912";
 
         function findPiPosition() {
             const number = document.getElementById('user-number').value;
+            let position;
+            if (positionMode === 'forced') {
+                position = FORCED_POSITION;
+            } else if (positionMode === 'fibonacci') {
+                position = generateFibonacciPosition(number);
+            }
+
 
             if (number.length > 0 && !isNaN(number)) {
                 const realPosition = findRealPosition(number);
@@ -197,8 +255,11 @@
                 if (realPosition) {
                     document.getElementById('result').innerHTML = `Your number <span class="bold-red">${number}</span> first appears at position <span class="highlighted-position">${realPosition}</span> in the digits of Pi.`;
                     state = 0;
-                } else {
+                } else if (realPosition === null && position == FORCED_POSITION) {
                     document.getElementById('result').innerHTML = `Your number <span class="bold-red">${number}</span> first appears at position <span class="highlighted-position">${FORCED_POSITION}</span> in the digits of Pi.`;
+                    state = 200;
+                } else {
+                    document.getElementById('result').innerHTML = `Your number <span class="bold-red">${number}</span> first appears at position <span class="highlighted-position">${generateFibonacciPosition(number)}</span> in the digits of Pi.`;
                     state = 200;
                 }
 
@@ -206,6 +267,53 @@
             } else {
                 alert('Please enter a valid number.');
             }
+        }
+
+        function generateFibonacciPosition(number) {
+            const digits = number.split('').map(digit => parseInt(digit));
+
+            const sums = [
+                (digits[0] + digits[1]) % 10,
+                (digits[0] + digits[2]) % 10,
+                (digits[0] + digits[3]) % 10,
+                (digits[1] + digits[2]) % 10,
+                (digits[1] + digits[3]) % 10
+            ];
+
+            return sums.join('');
+        }
+
+        function toggleSettings() {
+            const menu = document.getElementById('settings-menu');
+            const forcePositionInput = document.getElementById('force-position');
+            const positionModeSelect = document.getElementById('position-mode');
+
+            // Toggle visibility of the settings menu
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+
+            // Adjust the visibility of the force position input based on the current position mode
+            if (positionModeSelect.value === 'forced') {
+                forcePositionInput.style.display = 'block';
+            } else {
+                forcePositionInput.style.display = 'none';
+            }
+        }
+
+        function updateSettings() {
+            const newPosition = parseInt(document.getElementById('force-position').value);
+            const newMode = document.getElementById('position-mode').value;
+
+            if (!isNaN(newPosition) && newPosition > 0) {
+                FORCED_POSITION = newPosition;
+            }
+
+            positionMode = newMode;
+
+            // Display the updated settings
+            alert(`Settings updated!\nForce Position: ${FORCED_POSITION}\nMode: ${positionMode}`);
+
+            // Toggle the settings menu off after saving the settings
+            toggleSettings();
         }
 
         function findRealPosition(number) {
@@ -250,21 +358,15 @@
             return fibSequence.slice(2);
         }
 
-        function toggleSettings() {
-            const menu = document.getElementById('settings-menu');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function updateForcePosition() {
-            const newPosition = parseInt(document.getElementById('force-position').value);
-            if (!isNaN(newPosition) && newPosition > 0) {
-                FORCED_POSITION = newPosition;
-                alert(`Force position updated to ${FORCED_POSITION}`);
-                toggleSettings();
+        // Ensure the DOM is ready
+        document.getElementById('position-mode').addEventListener('change', function () {
+            const forcePositionInput = document.getElementById('force-position');
+            if (this.value === 'forced') {
+                forcePositionInput.style.display = 'block';
             } else {
-                alert('Please enter a valid position.');
+                forcePositionInput.style.display = 'none';
             }
-        }
+        });
     </script>
 
 </body>
