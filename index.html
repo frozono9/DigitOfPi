@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -172,13 +171,14 @@
 
     <!-- Settings Menu -->
     <div id="settings-menu">
-        <label for="force-position">Force Position:</label>
+        <!-- <label for="force-position">Force Position:</label> -->
         <input type="number" id="force-position" value="45782" style="display:none;"><br>
 
         <label for="position-mode">Position Mode:</label>
         <select id="position-mode">
             <option value="forced">Forced Position</option>
             <option value="fibonacci">Fibonacci Position</option>
+            <option value="number-calculation">Number Calculation</option>
         </select><br>
 
         <button onclick="updateSettings()">Save</button>
@@ -242,12 +242,14 @@
         function findPiPosition() {
             const number = document.getElementById('user-number').value;
             let position;
+            
             if (positionMode === 'forced') {
                 position = FORCED_POSITION;
             } else if (positionMode === 'fibonacci') {
                 position = generateFibonacciPosition(number);
+            } else if (positionMode === 'number-calculation') {
+                position = calculateNumberPosition(number);  // Call the new function for number calculation
             }
-
 
             if (number.length > 0 && !isNaN(number)) {
                 const realPosition = findRealPosition(number);
@@ -259,7 +261,7 @@
                     document.getElementById('result').innerHTML = `Your number <span class="bold-red">${number}</span> first appears at position <span class="highlighted-position">${FORCED_POSITION}</span> in the digits of Pi.`;
                     state = 200;
                 } else {
-                    document.getElementById('result').innerHTML = `Your number <span class="bold-red">${number}</span> first appears at position <span class="highlighted-position">${generateFibonacciPosition(number)}</span> in the digits of Pi.`;
+                    document.getElementById('result').innerHTML = `Your number <span class="bold-red">${number}</span> first appears at position <span class="highlighted-position">${position}</span> in the digits of Pi.`;
                     state = 200;
                 }
 
@@ -267,6 +269,20 @@
             } else {
                 alert('Please enter a valid number.');
             }
+        }
+
+        function calculateNumberPosition(number) {
+            const digits = number.split('').map(digit => parseInt(digit));
+
+            const sums = [
+                (digits[0] + 1) % 10,
+                (digits[1] + 2) % 10,
+                (digits[2] + 3) % 10,
+                (digits[3] + 4) % 10,
+                Math.floor(Math.random() * 10)
+            ];
+
+            return sums.join('');
         }
 
         function generateFibonacciPosition(number) {
@@ -358,14 +374,15 @@
             return fibSequence.slice(2);
         }
 
-        // Ensure the DOM is ready
         document.getElementById('position-mode').addEventListener('change', function () {
             const forcePositionInput = document.getElementById('force-position');
             if (this.value === 'forced') {
                 forcePositionInput.style.display = 'block';
+            } else if (this.value === 'number-calculation') {
+                forcePositionInput.style.display = 'none';  // Hide the input for "Number Calculation"
             } else {
-                forcePositionInput.style.display = 'none';
-            }
+                forcePositionInput.style.display = 'none';  // Hide the input for other modes
+            }e
         });
     </script>
 
