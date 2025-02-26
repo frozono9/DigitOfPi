@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -170,9 +171,159 @@
             margin-bottom: 10px;
         }
         
+        /* Dark mode toggle switch */
+        #theme-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        #theme-label {
+            margin-left: 10px;
+            font-size: 16px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+        
+        input:checked + .slider {
+            background-color: #2d72d9;
+        }
+        
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2d72d9;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .slider.round {
+            border-radius: 34px;
+        }
+        
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        
+        /* Dark mode class */
+        body.dark-mode {
+            background-color: #222;
+            color: #f0f0f0;
+        }
+        
+        body.dark-mode #container {
+            background-color: #333;
+        }
+        
+        body.dark-mode h1, 
+        body.dark-mode h2 {
+            color: #f0f0f0;
+        }
+        
+        body.dark-mode #pi-fun-facts {
+            background-color: #444;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        body.dark-mode #fun-facts-list li {
+            color: #ddd;
+        }
+        
+        body.dark-mode .toggle-button {
+            background-color: #333;
+            color: #2d72d9;
+            border-color: #2d72d9;
+        }
+        
+        body.dark-mode .toggle-button.active {
+            background-color: #2d72d9;
+            color: #f0f0f0;
+        }
+        
+        body.dark-mode input[type="text"],
+        body.dark-mode input[type="number"] {
+            background-color: #444;
+            color: #f0f0f0;
+            border: 1px solid #666;
+        }
+        
+        body.dark-mode button {
+            background-color: #2d72d9;
+            color: #f0f0f0;
+            border: none;
+        }
+        
+        body.dark-mode #sequence {
+            color: #aaa;
+        }
+        
+        body.dark-mode #settings-menu {
+            background-color: #444;
+            border-color: #666;
+            color: #f0f0f0;
+        }
+        
+        body.dark-mode #settings-menu input,
+        body.dark-mode #settings-menu select {
+            background-color: #333;
+            color: #f0f0f0;
+            border: 1px solid #555;
+        }
+        
+        body.dark-mode .highlighted-result {
+            color: #5d92f9;
+        }
+        
+        body.dark-mode .bold-red {
+            color: #ff6b6b;
+        }
     </style>
 </head>
 <body>
+    <!-- Dark Mode Toggle -->
+    <div id="theme-toggle">
+        <label class="switch">
+            <input type="checkbox" id="dark-mode-toggle">
+            <span class="slider round"></span>
+        </label>
+        <span id="theme-label">Dark Mode</span>
+    </div>
 
     <div id="container">
         <h1>Digits of Pi Search Tool</h1>
@@ -183,6 +334,7 @@
         </div>
         
         <div id="number-to-position-section" class="search-section">
+            <p>Before we get to the value of Pi, note that Pi (π) starts with "3." followed by an endless number of digits or decimals. In other words, Pi is an infinite decimal and an irrational number.</p>
             <p>Enter a number to see where it appears in the decimal sequence of Pi.</p>
             <div id="search-section">
                 <input type="text" id="user-number" placeholder="Enter a number">
@@ -191,6 +343,7 @@
         </div>
         
         <div id="position-to-number-section" class="search-section" style="display:none;">
+            <p>Before we get to the value of Pi, note that Pi (π) starts with "3." followed by an endless number of digits or decimals. In other words, Pi is an infinite decimal and an irrational number.</p>
             <p>Enter a position to see what digit appears at that position in Pi.</p>
             <div id="search-section">
                 <input type="number" id="user-position" placeholder="Enter a position" min="1">
@@ -234,7 +387,6 @@
     </div>
 
     <script>
-
         const piFunFacts = [
             "Pi is an irrational number, which means it cannot be expressed as a simple fraction. 🤔",
             "Pi is approximately 3.14159, but it has been calculated to over 31 trillion digits! 🔢",
@@ -527,7 +679,36 @@
                 forcePositionInput.style.display = 'none';  // Hide the input for other modes
             }
         });
-    </script>
 
+        // Dark mode toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const themeLabel = document.getElementById('theme-label');
+            
+            // Check for saved theme preference or respect OS preference
+            const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const savedTheme = localStorage.getItem('dark-mode');
+            
+            // Apply saved theme or OS preference
+            if (savedTheme === 'true' || (savedTheme === null && prefersDarkMode)) {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.checked = true;
+                themeLabel.textContent = 'Light Mode';
+            }
+            
+            // Toggle theme when switch is clicked
+            darkModeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('dark-mode', 'true');
+                    themeLabel.textContent = 'Light Mode';
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('dark-mode', 'false');
+                    themeLabel.textContent = 'Dark Mode';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
