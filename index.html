@@ -275,11 +275,11 @@
             const digits = number.split('').map(digit => parseInt(digit));
 
             const sums = [
-                Math.floor(Math.random() * 10)
                 (digits[0] + 1) % 10,
                 (digits[1] + 1) % 10,
                 (digits[2] + 1) % 10,
                 (digits[3] + 1) % 10,
+                Math.floor(Math.random() * 10)
             ];
 
             return sums.join('');
