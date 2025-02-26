@@ -30,7 +30,7 @@
             margin-top: 50px;
         }
 
-        input[type="text"] {
+        input[type="text"], input[type="number"] {
             font-size: 24px;
             padding: 10px;
             width: 250px;
@@ -42,6 +42,27 @@
             padding: 10px 20px;
             font-size: 20px;
             cursor: pointer;
+        }
+
+        .search-mode-toggle {
+            margin: 20px 0;
+        }
+
+        .toggle-button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 0 5px;
+            cursor: pointer;
+            border: 2px solid #2d72d9;
+            background-color: #f0f0f0;
+            color: #2d72d9;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .toggle-button.active {
+            background-color: #2d72d9;
+            color: white;
         }
 
         .bold-red {
@@ -155,11 +176,26 @@
 
     <div id="container">
         <h1>Digits of Pi Search Tool</h1>
-        <p>Enter a number to see where it appears in the decimal sequence of Pi.</p>
-
-        <div id="search-section">
-            <input type="text" id="user-number" placeholder="Enter a number">
-            <button onclick="findPiPosition()">Find Position</button>
+        
+        <div class="search-mode-toggle">
+            <button id="number-to-position-btn" class="toggle-button active" onclick="setSearchMode('number-to-position')">Number → Position</button>
+            <button id="position-to-number-btn" class="toggle-button" onclick="setSearchMode('position-to-number')">Position → Number</button>
+        </div>
+        
+        <div id="number-to-position-section" class="search-section">
+            <p>Enter a number to see where it appears in the decimal sequence of Pi.</p>
+            <div id="search-section">
+                <input type="text" id="user-number" placeholder="Enter a number">
+                <button onclick="findPiPosition()">Find Position</button>
+            </div>
+        </div>
+        
+        <div id="position-to-number-section" class="search-section" style="display:none;">
+            <p>Enter a position to see what digit appears at that position in Pi.</p>
+            <div id="search-section">
+                <input type="number" id="user-position" placeholder="Enter a position" min="1">
+                <button onclick="findNumberAtPosition()">Find Digit</button>
+            </div>
         </div>
 
         <div id="result"></div>
@@ -171,8 +207,14 @@
 
     <!-- Settings Menu -->
     <div id="settings-menu">
-        <!-- <label for="force-position">Force Position:</label> -->
+        <!-- Force Position settings -->
         <input type="number" id="force-position" value="63954" style="display:none;"><br>
+
+        <!-- Force Number settings -->
+        <div id="force-number-settings" style="display:none;">
+            <label for="force-number">Force Number:</label>
+            <input type="number" id="force-number" min="0" max="9" value="7"><br>
+        </div>
 
         <label for="position-mode">Position Mode:</label>
         <select id="position-mode">
@@ -205,13 +247,13 @@
             "Pi is not just a number, but an ongoing mystery that continues to be explored by mathematicians worldwide. 🔍",
             "Pi has been studied for nearly 4,000 years — ancient Babylonians and Egyptians had their own approximations of Pi! 🏺",
             "The earliest known written approximation of Pi comes from an Egyptian papyrus dated around 1650 BCE. 📜",
-            "The fraction 22/7 is a common approximation of Pi, but it’s only accurate to two decimal places. ➗",
+            "The fraction 22/7 is a common approximation of Pi, but it's only accurate to two decimal places. ➗",
             "In 2015, Pi was calculated to 13.3 trillion digits using a powerful computer — the process took 208 days! 💻⏳",
             "You only need the first 39 digits of Pi to accurately calculate the circumference of the observable universe! 🌌",
             "The Guinness World Record for the most digits of Pi recited without error is 111,700, achieved by Suresh Kumar Sharma in 2015! 🧠💥",
-            "There’s a language called “Pilish” where every word’s length corresponds to the digits of Pi — the first word has 3 letters, the second has 1, the third has 4, and so on. 📖",
-            "Pi has been featured in pop culture, like the movie Pi (1998) and shows like The Simpsons, where it’s often used in mathematical jokes. 🎥😂",
-            "Some people celebrate “Pi Approximation Day” on July 22nd (22/7) because the fraction 22/7 is a close estimate of Pi! 🎉",
+            "There's a language called Pilish where every word's length corresponds to the digits of Pi — the first word has 3 letters, the second has 1, the third has 4, and so on. 📖",
+            "Pi has been featured in pop culture, like the movie Pi (1998) and shows like The Simpsons, where it's often used in mathematical jokes. 🎥😂",
+            "Some people celebrate Pi Approximation Day on July 22nd (22/7) because the fraction 22/7 is a close estimate of Pi! 🎉",
             "If you convert the digits of Pi into Morse code, musical notes, or colors, you get beautiful and unexpected patterns — Pi is art in disguise! 🎶🎨"
         ];
 
@@ -241,13 +283,50 @@
         }
 
         // Call this function when the page loads to add the facts
-        window.onload = displayRandomFacts;
+        window.onload = function() {
+            displayRandomFacts();
+            setSearchMode('number-to-position');
+        };
 
         let state = 0;
         let FORCED_POSITION = 63954;
+        let FORCED_NUMBER = 7;
         let positionMode = 'number-calculation';
+        let currentSearchMode = 'number-to-position';
 
         const REAL_PI_DIGITS = "141592653589793238462643383279502884197169399375105820974944592371816406286208998628334825342117007982148086513282356647093844609550582231725359488128481174502841027219385291755596446229489549303819644288109756659334461284756482337867831527920490914564856692346034861045432664821339360746024914227372458700666031558817488152092096282925409171536436789259036001133053054882046652138414695194159168943305727806575959195309218611738193262179317513854807446237996274956735188575272489122793818361194912";
+
+        function setSearchMode(mode) {
+            currentSearchMode = mode;
+            
+            // Toggle button active states
+            document.getElementById('number-to-position-btn').classList.toggle('active', mode === 'number-to-position');
+            document.getElementById('position-to-number-btn').classList.toggle('active', mode === 'position-to-number');
+            
+            // Toggle section visibility
+            document.getElementById('number-to-position-section').style.display = mode === 'number-to-position' ? 'block' : 'none';
+            document.getElementById('position-to-number-section').style.display = mode === 'position-to-number' ? 'block' : 'none';
+            
+            // Update settings menu based on mode
+            updateSettingsMenuForMode(mode);
+            
+            // Clear results
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('sequence').innerHTML = '';
+        }
+
+        function updateSettingsMenuForMode(mode) {
+            const forcePositionSettings = document.getElementById('force-position');
+            const forceNumberSettings = document.getElementById('force-number-settings');
+            
+            if (mode === 'number-to-position') {
+                forcePositionSettings.style.display = positionMode === 'forced' ? 'block' : 'none';
+                forceNumberSettings.style.display = 'none';
+            } else { // position-to-number
+                forcePositionSettings.style.display = 'none';
+                forceNumberSettings.style.display = 'block';
+            }
+        }
 
         function findPiPosition() {
             const number = document.getElementById('user-number').value;
@@ -279,6 +358,60 @@
             } else {
                 alert('Please enter a valid number.');
             }
+        }
+
+        function findNumberAtPosition() {
+            const position = parseInt(document.getElementById('user-position').value);
+            
+            if (isNaN(position) || position < 1) {
+                alert('Please enter a valid position (positive integer).');
+                return;
+            }
+
+            // Force the number regardless of the actual digit at the position
+            let numberAtPosition;
+
+            if (position < 30) {
+                numberAtPosition = REAL_PI_DIGITS[position-1].toString();
+            } else {
+                numberAtPosition = FORCED_NUMBER.toString();
+            }
+            
+            document.getElementById('result').innerHTML = `At position <span class="highlighted-position">${position}</span> in Pi, the digit is <span class="highlighted-position">${numberAtPosition}</span>`;
+            displayPiSequenceForPosition(position, numberAtPosition);
+        }
+
+        function displayPiSequenceForPosition(position, numberAtPosition) {
+            const sequenceElement = document.getElementById('sequence');
+            
+            // Adjust position to be 0-indexed for the array
+            const adjustedPosition = position - 1;
+            
+            // Display digits before and after the number
+            const displayRange = 50000; // Show 50 digits before and after
+            const startIndex = Math.max(0, adjustedPosition - displayRange);
+            const endIndex = Math.min(REAL_PI_DIGITS.length, adjustedPosition + 1 + displayRange);
+            
+            const before = REAL_PI_DIGITS.substring(startIndex, adjustedPosition);
+            const after = REAL_PI_DIGITS.substring(adjustedPosition + 1, endIndex);
+            
+            let fullSequence; // Declare the variable outside the if/else block
+            
+            if (position < 30) {
+                fullSequence = `${before}<span class="bold-red">${REAL_PI_DIGITS[position-1]}</span>${after}`;
+            } else {
+                fullSequence = `${before}<span class="bold-red">${numberAtPosition}</span>${after}`;
+            }
+            
+            sequenceElement.innerHTML = fullSequence;
+            
+            // Scroll to the highlighted number
+            const sequenceWidth = sequenceElement.scrollWidth;
+            const windowWidth = window.innerWidth;
+            const numberPosition = before.length;
+            const offset = numberPosition * (sequenceWidth / fullSequence.length);
+            
+            sequenceElement.scrollLeft = offset - windowWidth / 3;
         }
 
         function calculateNumberPosition(number) {
@@ -315,32 +448,28 @@
 
         function toggleSettings() {
             const menu = document.getElementById('settings-menu');
-            const forcePositionInput = document.getElementById('force-position');
-            const positionModeSelect = document.getElementById('position-mode');
-
+            
             // Toggle visibility of the settings menu
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-
-            // Adjust the visibility of the force position input based on the current position mode
-            if (positionModeSelect.value === 'forced') {
-                forcePositionInput.style.display = 'block';
-            } else {
-                forcePositionInput.style.display = 'none';
-            }
+            
+            // Update settings menu based on current mode
+            updateSettingsMenuForMode(currentSearchMode);
         }
 
         function updateSettings() {
             const newPosition = parseInt(document.getElementById('force-position').value);
+            const newNumber = parseInt(document.getElementById('force-number').value);
             const newMode = document.getElementById('position-mode').value;
 
             if (!isNaN(newPosition) && newPosition > 0) {
                 FORCED_POSITION = newPosition;
             }
+            
+            if (!isNaN(newNumber) && newNumber >= 0 && newNumber <= 9) {
+                FORCED_NUMBER = newNumber;
+            }
 
             positionMode = newMode;
-
-            // // Display the updated settings
-            // alert(`Settings updated!\nForce Position: ${FORCED_POSITION}\nMode: ${positionMode}`);
 
             // Toggle the settings menu off after saving the settings
             toggleSettings();
@@ -396,7 +525,7 @@
                 forcePositionInput.style.display = 'none';  // Hide the input for "Number Calculation"
             } else {
                 forcePositionInput.style.display = 'none';  // Hide the input for other modes
-            }e
+            }
         });
     </script>
 
