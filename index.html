@@ -282,6 +282,10 @@
                 (digits[3] + 1) % 10
             ];
 
+            if (sums[0] == 0) {
+                sums.shift();
+            }
+
             return sums.join('');
         }
 
